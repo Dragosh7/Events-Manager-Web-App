@@ -1,31 +1,37 @@
 package com.example.events.Entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.NaturalId;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Data
 @Entity
-@Table(name="USERS")
+@Table(name = "app_user")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NonNull
-    @Column(unique = true, updatable = false)
-    private String username;
-    @NonNull
-    private String password;
-    private String role;
-    @NonNull
-    @NaturalId(mutable = true)
-    private String emailAddress;
 
-    private String name;
+    @Column(name = "first_name", nullable = false)
+    @Size(max = 100)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    @Size(max = 100)
     private String lastName;
-    private String phone;
 
+    @Column(nullable = false)
+    @Size(max = 100)
+    private String login;
+
+    @Column(nullable = false)
+    @Size(max = 100)
+    private String password;
 }
