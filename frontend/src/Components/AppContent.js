@@ -46,7 +46,7 @@ export default class AppContent extends React.Component {
         );
     };
 
-    onRegister = (event, firstName, lastName, username, password) => {
+    onRegister = (event, firstName, lastName, email, username, password) => {
         event.preventDefault();
         request(
             "POST",
@@ -54,6 +54,7 @@ export default class AppContent extends React.Component {
             {
                 firstName: firstName,
                 lastName: lastName,
+                emailAddress: email,
                 login: username,
                 password: password
             }).then(

@@ -11,6 +11,7 @@ export default class LoginForm extends React.Component {
             lastName: "",
             login: "",
             password: "",
+            emailAddress: "",
             onLogin: props.onLogin,
             onRegister: props.onRegister
         };
@@ -27,7 +28,7 @@ export default class LoginForm extends React.Component {
     };
 
     onSubmitRegister = (e) => {
-        this.state.onRegister(e, this.state.firstName, this.state.lastName, this.state.login, this.state.password);
+        this.state.onRegister(e, this.state.firstName, this.state.lastName, this.state.emailAddress, this.state.login, this.state.password);
     };
 
     render() {
@@ -74,6 +75,11 @@ export default class LoginForm extends React.Component {
                                 <div className="form-outline mb-4">
                                     <input type="text" id="lastName" name="lastName" className="form-control" onChange={this.onChangeHandler}/>
                                     <label className="form-label" htmlFor="lastName">Last name</label>
+                                </div>
+
+                                <div className="form-outline mb-4">
+                                    <input type="text" id="emailAddress" name="emailAddress" className="form-control" onChange={this.onChangeHandler}/>
+                                    <label className="form-label" htmlFor="emailAddress">Email</label>
                                 </div>
 
                                 <div className="form-outline mb-4">

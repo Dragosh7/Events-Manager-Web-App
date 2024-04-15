@@ -20,6 +20,7 @@ public class WebConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
+        //config.addAllowedOrigin("*");
         config.addAllowedOrigin("http://localhost:3000");
         config.setAllowedHeaders(Arrays.asList(
                 HttpHeaders.AUTHORIZATION,
@@ -35,11 +36,11 @@ public class WebConfig {
         ));
         config.setMaxAge(3600L);
         source.registerCorsConfiguration("/**",config);
-       // FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
+        // FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
 
         CorsFilter bean = new CorsFilter(source);
         //bean.setOrder(-102);
-       // bean.setEnabled(false);
+        // bean.setEnabled(false);
         return bean;
     }
 }
