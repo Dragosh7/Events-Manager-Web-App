@@ -185,7 +185,9 @@ public class UserService {
                 .collect(Collectors.toList());
 
     }
-
+    public List<User> retrieveAllUsers(){
+        return userRepository.findAll();
+    }
     public User updateUser(UserDto user, String password){
         return userRepository.save(userMapper.userDtoToEntity(user, password));
     }

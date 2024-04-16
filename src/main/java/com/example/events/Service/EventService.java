@@ -2,6 +2,7 @@ package com.example.events.Service;
 
 import com.example.events.Entity.Event;
 import com.example.events.Entity.User;
+import com.example.events.Observer.EventPublisher;
 import com.example.events.Repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class EventService {
     private final EventRepository eventRepository;
     private final UserService userService;
+    private final EventPublisher eventPublisher;
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
@@ -41,13 +43,21 @@ public class EventService {
                         Event existingEvent = eventRepository.findById(event.getId())
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
                         event.setOrganizer(existingEvent.getOrganizer());
+
+                        subscribeAllUsers(event);
+                        eventPublisher.notifyObservers(event,"Check out what's new on this "+event.getName()+" event");
+
                         return eventRepository.save(event);
                     }
                         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to modify this event");
                 }
                     else{
                          event.setOrganizer(activeUser);
-                     return eventRepository.save(event);
+
+                     subscribeAllUsers(event);
+                    eventPublisher.notifyObservers(event,"New event organized, buy a ticket at "+event.getName());
+
+                    return eventRepository.save(event);
                     }
 
             }
@@ -60,6 +70,11 @@ public class EventService {
     public Event getEventByName(String eventName) {
         return eventRepository.findByName(eventName);
     }
-
+    private void subscribeAllUsers(Event event) {
+        List<User> users = userService.retrieveAllUsers();
+        for (User user : users) {
+            eventPublisher.subscribe(user, event);
+        }
+    }
 
 }

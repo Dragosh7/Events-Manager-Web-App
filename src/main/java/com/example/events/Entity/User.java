@@ -7,6 +7,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.NaturalId;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -57,5 +60,19 @@ public class User {
     @Builder.Default
     @JsonIgnore
     private Boolean enabled = true;
+
+    public void subscribeToEvent(Event event) {
+        subscribedEvents.add(event);
+    }
+
+    @Transient
+    private List<Event> subscribedEvents = new ArrayList<>();
+    public void unsubscribeFromEvent(Event event) {
+        subscribedEvents.remove(event);
+    }
+
+    public List<Event> getSubscribedEvents() {
+        return subscribedEvents;
+    }
 
 }
