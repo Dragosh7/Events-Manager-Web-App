@@ -30,7 +30,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
-
     private final UserMapper userMapper;
 
     public UserDto getLoginUser() {
@@ -160,6 +159,12 @@ public class UserService {
         if (!existingUser.isActive() || isAdmin(existingUser.getRole())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to delete this user");
         }
+        User nextAdmin = userRepository.findFirstAdmin("ADMIN");
+        List<Event> events = eventRepository.findByOrganizer(existingUser);
+        for (Event event : events) {
+            event.setOrganizer(nextAdmin);
+        }
+        eventRepository.saveAll(events);
 
         userRepository.delete(existingUser);
     }
@@ -199,8 +204,11 @@ public class UserService {
     public void save(User user) {
         userRepository.save(user);
     }
-    public UserDto getUserById(Long userId) {
-        return userMapper.userEntityToDto(userRepository.findById(userId).orElse(null));
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);//.orElse(null);
+    }
+    public UserDto getUserById(Long Id ) {
+        return userMapper.userEntityToDto(userRepository.findById(Id).orElse(null));
     }
 
     public boolean isOrganizerAssociatedWithEvent(Long organizerId, Long eventId) {

@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.username = ?#{principal.username}")
     Optional<User> findLoginUser();
     boolean existsByEmailAddress(String emailAddress);
+    @Query("SELECT u FROM User u WHERE u.role = :role ")
+
+    User findFirstAdmin(@Param("role") String role);
 }

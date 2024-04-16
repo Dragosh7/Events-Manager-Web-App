@@ -38,6 +38,9 @@ public class EventService {
 
                     if(userService.isUserAllowedToUpdateEvent(activeUser.getId(), event.getId()))
                     {
+                        Event existingEvent = eventRepository.findById(event.getId())
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+                        event.setOrganizer(existingEvent.getOrganizer());
                         return eventRepository.save(event);
                     }
                         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to modify this event");
@@ -54,5 +57,9 @@ public class EventService {
     public void deleteEventById(Long eventId) {
         eventRepository.deleteById(eventId);
     }
+    public Event getEventByName(String eventName) {
+        return eventRepository.findByName(eventName);
+    }
+
 
 }
