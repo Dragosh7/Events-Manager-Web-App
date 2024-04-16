@@ -40,11 +40,9 @@ public class ReservationController {
         }
     }
 
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @RequestBody Reservation reservation) {
-        reservation.setId(id);
-        Reservation updatedReservation = reservationService.saveOrUpdateReservation(reservation);
+    @PutMapping("/")
+    public ResponseEntity<Reservation> updateReservation( @RequestBody ReservationRequest reservation) {
+        Reservation updatedReservation = reservationService.createReservation(reservation);
         return ResponseEntity.ok(updatedReservation);
     }
 

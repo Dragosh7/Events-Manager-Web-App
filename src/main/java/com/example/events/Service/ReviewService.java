@@ -66,8 +66,11 @@ public class ReviewService {
         Optional<User> userOptional  = userService.findWhichUserIsActive();
         if(userOptional .isPresent()) {
             User user = userOptional.get();
-            List<Reservation> reservations = reservationService.getReservationsByUserAndEvent(user, event);
-            return !reservations.isEmpty();
+            Reservation reservations = reservationService.getReservationsByUserAndEvent(user, event);
+            if(reservations != null){
+                return true;
+            }
+
         }
         return false;
     }

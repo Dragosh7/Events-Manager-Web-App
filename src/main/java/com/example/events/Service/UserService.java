@@ -32,11 +32,6 @@ public class UserService {
     private final EventRepository eventRepository;
     private final UserMapper userMapper;
 
-    public UserDto getLoginUser() {
-        Optional<User> user = userRepository.findLoginUser();
-        System.out.println(user);
-        return user.map(userMapper::userEntityToDto).orElse(null);
-    }
 
     public UserDto registerUser(RegistrationRequest registrationRequest) {
         User user = User.builder()
@@ -52,17 +47,20 @@ public class UserService {
         return this.createUser(user);
     }
     public UserDto registerUserRole(RegistrationRequest registrationRequest,String role) {
-        User user = User.builder()
-                .username(registrationRequest.getUsername())
-                .firstName(registrationRequest.getFirstName())
-                .lastName(registrationRequest.getLastName())
-                .password(registrationRequest.getPassword())
-                .emailAddress(registrationRequest.getEmailAddress())
-                .role(role)
-                .build();
-        System.out.println(user);
 
-        return this.createUser(user);
+        if(isAdminActive()) {
+            User user = User.builder()
+                    .username(registrationRequest.getUsername())
+                    .firstName(registrationRequest.getFirstName())
+                    .lastName(registrationRequest.getLastName())
+                    .password(registrationRequest.getPassword())
+                    .emailAddress(registrationRequest.getEmailAddress())
+                    .role(role)
+                    .build();
+            return this.createUser(user);
+        }
+
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to add this role: "+role);
     }
     private boolean isAdmin(String role) {
         return "admin".equalsIgnoreCase(role);
@@ -159,7 +157,15 @@ public class UserService {
         if (!existingUser.isActive() || isAdmin(existingUser.getRole())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to delete this user");
         }
+
         User nextAdmin = userRepository.findFirstAdmin("ADMIN");
+        if (nextAdmin != null && nextAdmin.getUsername().equals("root")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Root can't be deleted");
+        }
+
+        if (nextAdmin == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No organizer/admin can take this place");
+        }
         List<Event> events = eventRepository.findByOrganizer(existingUser);
         for (Event event : events) {
             event.setOrganizer(nextAdmin);
@@ -188,24 +194,7 @@ public class UserService {
     public List<User> retrieveAllUsers(){
         return userRepository.findAll();
     }
-    public User updateUser(UserDto user, String password){
-        return userRepository.save(userMapper.userDtoToEntity(user, password));
-    }
 
-    public void deleteUser(User user){
-        userRepository.delete(user);
-    }
-
-    public void deleteById(Long ID) {
-        userRepository.deleteById(ID);
-    }
-
-    public Optional<User> findById(Long ID) {
-        return userRepository.findById(ID);
-    }
-    public void save(User user) {
-        userRepository.save(user);
-    }
     public Optional<User> getUserByUsername(String username) {
         return userRepository.findByUsername(username);//.orElse(null);
     }

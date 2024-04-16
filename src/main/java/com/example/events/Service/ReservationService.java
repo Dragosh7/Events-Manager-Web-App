@@ -30,14 +30,11 @@ public class ReservationService {
         return reservationRepository.findById(id).orElse(null);
     }
 
-    public Reservation saveOrUpdateReservation(Reservation reservation) {
-        return reservationRepository.save(reservation);
-    }
-
     public Reservation createReservation(ReservationRequest reservationRequest) {
 
         Event event = eventService.getEventByName(reservationRequest.getEventName());
         User user = userService.findWhichUserIsActive().orElse(null);
+
         if (user == null)
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Log in first or create an account");
 
@@ -52,7 +49,13 @@ public class ReservationService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Few tickets left. Can't sell that much");
 
         ticketService.sellTicket(ticket.getId(), reservationRequest.getQuantity());
+        Reservation existingReservation = reservationRepository.findByUserAndTicketEvent(user, event);
 
+        if (existingReservation != null) {
+            int newQuantity = existingReservation.getQuantity() + reservationRequest.getQuantity();
+            existingReservation.setQuantity(newQuantity);
+            return reservationRepository.save(existingReservation);
+        }
         Reservation reservation = Reservation.builder()
                 .user(user)
                 .ticket(ticket)
@@ -63,13 +66,12 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
-
     public void deleteReservationById(Long id) {
 
         reservationRepository.deleteById(id);
     }
 
-    public List<Reservation> getReservationsByUserAndEvent(User user, Event event) {
+    public Reservation getReservationsByUserAndEvent(User user, Event event) {
         return reservationRepository.findByUserAndTicketEvent(user, event);
     }
 }

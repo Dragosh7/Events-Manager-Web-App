@@ -8,9 +8,6 @@ import java.security.NoSuchAlgorithmException;
 public class MyPasswordEncoder {
 
     public static String encode(String rawPassword) {
-        // Implement your custom encoding logic here
-        // For example, you can use cryptographic algorithms like SHA-256 or bcrypt
-        // Here's a simple example using SHA-256
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] encodedHash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
