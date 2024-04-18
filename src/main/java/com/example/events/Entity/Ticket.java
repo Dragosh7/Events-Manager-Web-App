@@ -22,6 +22,7 @@ public class Ticket {
     private Event event;
 
     private String ticketType;
+    private String eventName;
     private int availability;
 
 }

@@ -1,10 +1,13 @@
 package com.example.events.Service;
 
 import com.example.events.Entity.Event;
+import com.example.events.Entity.Ticket;
 import com.example.events.Entity.User;
 import com.example.events.Observer.EventPublisher;
 import com.example.events.Repository.EventRepository;
+import com.example.events.Repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +17,22 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Optional;
 
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @Service
 public class EventService {
     private final EventRepository eventRepository;
+    private final TicketService ticketService;
     private final UserService userService;
     private final EventPublisher eventPublisher;
+
+
+    public EventService(@Lazy EventRepository eventRepository,@Lazy TicketService ticketService,@Lazy UserService userService, @Lazy EventPublisher eventPublisher) {
+
+        this.eventRepository = eventRepository;
+        this.ticketService = ticketService;
+        this.userService = userService;
+        this.eventPublisher = eventPublisher;
+    }
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
@@ -34,7 +47,7 @@ public class EventService {
         Optional<User> activeUserOptional = userService.findWhichUserIsActive();
         if(activeUserOptional.isPresent()) {
             User activeUser = activeUserOptional.get();
-            String role = activeUser.getRole();
+            String role = activeUser.getRole().toString();
             if ("organizer".equalsIgnoreCase(role) || "admin".equalsIgnoreCase(role)) {
                 if(eventRepository.existsByName(event.getName())){
 
@@ -65,6 +78,16 @@ public class EventService {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Log in as organizer first");    }
 
     public void deleteEventById(Long eventId) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        List<Ticket> tickets = ticketService.getTickets(eventId);
+        for (Ticket ticket : tickets) {
+            ticket.setEvent(null);
+        }
+
+        ticketService.saveAll(tickets);
+
         eventRepository.deleteById(eventId);
     }
     public Event getEventByName(String eventName) {

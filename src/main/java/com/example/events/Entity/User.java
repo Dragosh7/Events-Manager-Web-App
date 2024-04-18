@@ -42,7 +42,8 @@ public class User {
     @NotBlank
     @NaturalId(mutable = true)
     private String emailAddress;
-    private String role ;
+    @Enumerated(EnumType.STRING)
+    private UserRole role ;
     @JsonIgnore
     private boolean active;
     @Builder.Default

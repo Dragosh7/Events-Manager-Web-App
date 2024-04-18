@@ -1,5 +1,6 @@
 package com.example.events.DTOs;
 
+import com.example.events.Entity.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,7 @@ public class UserDto {
     private String lastName;
     private String emailAddress;
     private String username;
-    private String role ;
+    private UserRole role ;
     private String token;
 
 }

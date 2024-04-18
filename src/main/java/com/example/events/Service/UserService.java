@@ -5,11 +5,15 @@ import com.example.events.DTOs.*;
 import com.example.events.DTOs.UserDto;
 import com.example.events.Entity.Event;
 import com.example.events.Entity.User;
+import com.example.events.Entity.UserRole;
 import com.example.events.Exceptions.AppException;
 import com.example.events.Mapper.UserMapper;
 import com.example.events.MyPasswordEncoder.MyPasswordEncoder;
 import com.example.events.Repository.EventRepository;
 import com.example.events.Repository.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +21,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.crypto.SecretKey;
 import java.nio.CharBuffer;
 import java.nio.file.AccessDeniedException;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,7 +46,7 @@ public class UserService {
                 .lastName(registrationRequest.getLastName())
                 .password(registrationRequest.getPassword())
                 .emailAddress(registrationRequest.getEmailAddress())
-                .role(("USER"))
+                .role((UserRole.USER))
                 .build();
         System.out.println(user);
 
@@ -48,6 +54,19 @@ public class UserService {
     }
     public UserDto registerUserRole(RegistrationRequest registrationRequest,String role) {
 
+        if( role.isEmpty()  )
+        {
+            role="USER";
+        }
+        else{
+            try{
+                UserRole.valueOf(role.toUpperCase());
+            }
+            catch (IllegalArgumentException e)
+            {
+                role="USER";
+            }
+        }
         if(isAdminActive()) {
             User user = User.builder()
                     .username(registrationRequest.getUsername())
@@ -55,7 +74,7 @@ public class UserService {
                     .lastName(registrationRequest.getLastName())
                     .password(registrationRequest.getPassword())
                     .emailAddress(registrationRequest.getEmailAddress())
-                    .role(role)
+                    .role(UserRole.valueOf(role.toUpperCase()))
                     .build();
             return this.createUser(user);
         }
@@ -71,9 +90,8 @@ public class UserService {
     public UserDto updateUser(String username, UserUpdateRequest updateRequest) {
         User existingUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with username: " + username));
-        System.out.println(!existingUser.isActive());
-        System.out.println(!isAdmin(existingUser.getRole()));
-        if (!existingUser.isActive() || isAdmin(existingUser.getRole())) {
+
+        if (!existingUser.isActive() || isAdmin(existingUser.getRole().toString())) {
             try {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to update this user");
             } catch (Exception e) {
@@ -154,7 +172,7 @@ public class UserService {
         User existingUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with username: " + username));
 
-        if (!existingUser.isActive() || isAdmin(existingUser.getRole())) {
+        if (!existingUser.isActive() || isAdmin(existingUser.getRole().toString())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not authorized to delete this user");
         }
 
@@ -175,9 +193,9 @@ public class UserService {
         userRepository.delete(existingUser);
     }
     public boolean isAdminActive(){return getUsers().stream()
-            .anyMatch(user -> "admin".equalsIgnoreCase(user.getRole()) && user.isActive());}
+            .anyMatch(user -> UserRole.ADMIN.equals(user.getRole()) && user.isActive());}
     public boolean isOrganizerActive(){return getUsers().stream()
-            .anyMatch(user -> "organizer".equalsIgnoreCase(user.getRole()) && user.isActive());}
+            .anyMatch(user -> UserRole.ORGANIZER.equals(user.getRole()) && user.isActive());}
     public UserDto findByUsername(String login) {
         User user = userRepository.findByUsername(login)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
@@ -223,6 +241,17 @@ public class UserService {
         } else {
             return false;
         }
+    }
+    public String generateToken(UserDto userDto) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 3600000); // Token expiry after 1 hour (adjust as needed)
+        SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+        return Jwts.builder()
+                .setSubject(userDto.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key,SignatureAlgorithm.HS512)
+                .compact();
     }
 
 }

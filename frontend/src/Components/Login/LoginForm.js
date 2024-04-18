@@ -9,7 +9,7 @@ export default class LoginForm extends React.Component {
             active: "login",
             firstName: "",
             lastName: "",
-            login: "",
+            username: "",
             password: "",
             emailAddress: "",
             onLogin: props.onLogin,
@@ -24,11 +24,11 @@ export default class LoginForm extends React.Component {
     };
 
     onSubmitLogin = (e) => {
-        this.state.onLogin(e, this.state.login, this.state.password);
+        this.state.onLogin(e, this.state.username, this.state.password);
     };
 
     onSubmitRegister = (e) => {
-        this.state.onRegister(e, this.state.firstName, this.state.lastName, this.state.emailAddress, this.state.login, this.state.password);
+        this.state.onRegister(e, this.state.firstName, this.state.lastName, this.state.emailAddress, this.state.username, this.state.password);
     };
 
     render() {
@@ -51,7 +51,7 @@ export default class LoginForm extends React.Component {
                             <form onSubmit={this.onSubmitLogin}>
 
                                 <div className="form-outline mb-4">
-                                    <input type="login" id="loginName" name= "login" className="form-control" onChange={this.onChangeHandler}/>
+                                    <input type="text" id="username" name= "username" className="form-control" onChange={this.onChangeHandler}/>
                                     <label className="form-label" htmlFor="loginName">Username</label>
                                 </div>
 
@@ -83,7 +83,7 @@ export default class LoginForm extends React.Component {
                                 </div>
 
                                 <div className="form-outline mb-4">
-                                    <input type="text" id="login" name="login" className="form-control" onChange={this.onChangeHandler}/>
+                                    <input type="text" id="username" name="username" className="form-control" onChange={this.onChangeHandler}/>
                                     <label className="form-label" htmlFor="login">Username</label>
                                 </div>
 

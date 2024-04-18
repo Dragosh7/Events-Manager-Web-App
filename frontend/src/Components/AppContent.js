@@ -5,7 +5,7 @@ import { request, setAuthHeader } from '../axios_helper';
 
 import Buttons from './Buttons';
 import AuthContent from './AuthContent';
-import LoginForm from './LoginForm';
+import LoginForm from './Login/LoginForm';
 import WelcomeContent from './WelcomeContent'
 
 export default class AppContent extends React.Component {
@@ -21,10 +21,6 @@ export default class AppContent extends React.Component {
         this.setState({componentToShow: "login"})
     };
 
-    logout = () => {
-        this.setState({componentToShow: "welcome"})
-        setAuthHeader(null);
-    };
 
     onLogin = (e, username, password) => {
         e.preventDefault();
@@ -32,7 +28,7 @@ export default class AppContent extends React.Component {
             "POST",
             "/login",
             {
-                login: username,
+                username: username,
                 password: password
             }).then(
             (response) => {
@@ -45,7 +41,22 @@ export default class AppContent extends React.Component {
             }
         );
     };
-
+    onLogout = (e) => {
+        e.preventDefault();
+        request(
+            "GET",
+            "/logout",
+            ).then(
+            (response) => {
+                setAuthHeader(response.data.token);
+                this.setState({componentToShow: "login"});
+            }).catch(
+            (error) => {
+                setAuthHeader(null);
+                this.setState({componentToShow: "welcome"})
+            }
+        );
+    };
     onRegister = (event, firstName, lastName, email, username, password) => {
         event.preventDefault();
         request(
@@ -55,7 +66,7 @@ export default class AppContent extends React.Component {
                 firstName: firstName,
                 lastName: lastName,
                 emailAddress: email,
-                login: username,
+                username: username,
                 password: password
             }).then(
             (response) => {
@@ -74,7 +85,7 @@ export default class AppContent extends React.Component {
             <>
                 <Buttons
                     login={this.login}
-                    logout={this.logout}
+                    logout={this.onLogout}
                 />
 
                 {this.state.componentToShow === "welcome" && <WelcomeContent /> }

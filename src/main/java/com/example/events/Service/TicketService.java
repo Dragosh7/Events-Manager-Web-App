@@ -7,6 +7,8 @@ import com.example.events.Entity.User;
 import com.example.events.Mapper.UserMapper;
 import com.example.events.Repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.internal.util.stereotypes.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,9 +21,13 @@ import java.util.Optional;
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final UserService userService;
+    @Lazy
     private final EventService eventService;
 
 
+    public void saveAll(List<Ticket> tickets) {
+        ticketRepository.saveAll(tickets);
+    }
     public Ticket saveTicket(Ticket ticket) {
         Event event = eventService.getEventById(ticket.getEvent().getId());
         if (event != null) {
@@ -32,6 +38,7 @@ public class TicketService {
 
                 if (userService.isUserAllowedToUpdateEvent(loggedInUser.getId(), event.getId())) {
                     ticket.setEvent(event);
+                    ticket.setEventName(event.getName());
                     return ticketRepository.save(ticket);
                 }
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Only the organizer of the event can add new tickets");
@@ -79,6 +86,9 @@ public class TicketService {
     }
     public Ticket ticketExistsWithTicketType(String ticketType, Event event) {
         return ticketRepository.findByTicketTypeAndEvent(ticketType,event).orElse(null);
+    }
+    public List<Ticket> getTickets(Long eventId) {
+        return ticketRepository.findByEventId(eventId);
     }
 
 }
