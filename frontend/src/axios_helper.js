@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 export const getAuthToken = () => {
-    return window.localStorage.getItem('auth_token');
+    return window.localStorage.getItem('user');
 };
 
 export const setAuthHeader = (token) => {
     if (token !== null) {
-        window.localStorage.setItem("auth_token", token);
+        window.localStorage.setItem("user", JSON.stringify(token));
     } else {
-        window.localStorage.removeItem("auth_token");
+        window.localStorage.removeItem("user");
     }
 };
 

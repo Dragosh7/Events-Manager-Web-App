@@ -62,6 +62,10 @@ public class User {
     @JsonIgnore
     private Boolean enabled = true;
 
+    private String verificationCode;
+
+    private boolean verified = false;
+
     public void subscribeToEvent(Event event) {
         subscribedEvents.add(event);
     }

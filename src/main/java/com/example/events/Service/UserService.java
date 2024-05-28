@@ -17,17 +17,17 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.SecretKey;
 import java.nio.CharBuffer;
 import java.nio.file.AccessDeniedException;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -37,6 +37,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final UserMapper userMapper;
+    @Autowired
+    private JavaMailSender mailSender;
 
 
     public UserDto registerUser(RegistrationRequest registrationRequest) {
@@ -47,11 +49,30 @@ public class UserService {
                 .password(registrationRequest.getPassword())
                 .emailAddress(registrationRequest.getEmailAddress())
                 .role((UserRole.USER))
+                .verificationCode(generateVerificationCode())
+                .verified(false)
                 .build();
-        System.out.println(user);
-
+        sendVerificationEmail(user);
         return this.createUser(user);
     }
+    private void sendVerificationEmail(User user) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(user.getEmailAddress());
+        message.setSubject("Email Verification");
+        message.setText("Please click the link below to verify your email: \n" +
+                "http://localhost:8080/verify?code=" + user.getVerificationCode());
+        mailSender.send(message);
+    }
+    public String verifyEmail(String verificationCode) {
+        User user = userRepository.findByVerificationCode(verificationCode);
+        if (user != null) {
+            user.setVerified(true);
+            userRepository.save(user);
+            return "success";
+        }
+        return "Unable to verify";
+    }
+
     public UserDto registerUserRole(RegistrationRequest registrationRequest,String role) {
 
         if( role.isEmpty()  )
@@ -168,6 +189,9 @@ public class UserService {
             userRepository.save(user);
         }
     }
+    private String generateVerificationCode() {
+        return UUID.randomUUID().toString().substring(0, 6);
+    }
     public void deleteUser(String username) {
         User existingUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with username: " + username));
@@ -213,8 +237,8 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public Optional<User> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);//.orElse(null);
+    public UserDto getUserByUsername(String username) {
+        return userMapper.userEntityToDto(Objects.requireNonNull(userRepository.findByUsername(username).orElse(null)));
     }
     public UserDto getUserById(Long Id ) {
         return userMapper.userEntityToDto(userRepository.findById(Id).orElse(null));

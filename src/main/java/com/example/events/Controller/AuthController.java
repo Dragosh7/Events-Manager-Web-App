@@ -1,7 +1,9 @@
 package com.example.events.Controller;
 
 import com.example.events.DTOs.*;
+import com.example.events.Entity.User;
 import com.example.events.Exceptions.AppException;
+import com.example.events.Repository.UserRepository;
 import com.example.events.Service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
@@ -21,27 +24,28 @@ import java.util.List;
 public class AuthController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-//   @PostMapping("/login")
-//   public ResponseEntity<?> login(@RequestBody @Valid CredentialsDto credentialsDto) {
-//       try {
-//           UserDto userDto = userService.login(credentialsDto);
-//           return ResponseEntity.ok(userDto);
-//       } catch (AppException e) {
-//           HttpStatus status = e.getStatus();
-//           String errorMessage = e.getMessage();
-//           return ResponseEntity.status(status).body(errorMessage);
-//       }
-//   }
+
+    @GetMapping("/verify")
+    public String verifyEmail(@RequestParam("code") String code) {
+        User user = userRepository.findByVerificationCode(code);
+        if (user == null) {
+            return "error";
+        }
+        userService.verifyEmail(code);
+        return "verificationSuccess";
+    }
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid CredentialsDto credentialsDto) {
         try {
             UserDto userDto = userService.login(credentialsDto);
 
             String token = userService.generateToken(userDto);
+            userDto.setToken(token);
 
-            return ResponseEntity.ok(new LoginResponse(userDto, token));
+            return ResponseEntity.ok(userDto);
         } catch (AppException e) {
             HttpStatus status = e.getStatus();
             String errorMessage = e.getMessage();
@@ -104,10 +108,15 @@ public class AuthController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @GetMapping("/user/{id}")
+    @GetMapping("/user/id/{id}")
     public UserDto findUserById(@PathVariable Long id) {
         UserDto userDto = userService.getUserById(id);
         return userDto;
+    }
+
+    @GetMapping("/user/{username}")
+    public UserDto findUserByUsername(@PathVariable String username) {
+        return userService.getUserByUsername(username);
     }
 
     @GetMapping("/allUsers")
